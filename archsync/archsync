@@ -1,0 +1,78 @@
+#!/bin/env bash
+
+prog_name=$(basename $0)
+
+archsync_data_dir="${ARCH_SYNC_DIR:-${XDG_CONFIG_HOME}/archsync}"
+archsync_profile="${ARCH_SYNC_PROFILE:-default}"
+
+print_help() {
+    read -r -d '' VAR << EOM
+Usage: $prog_name -c <subcommand> [-p profile] [-d dir]
+Environment variables:
+    ARCH_SYNC_DIR - specify dir for .sh and .list files=$archsync_data_dir
+    ARCH_SYNC_PROFILE - profile name=$archsync_profile
+Subscommands:
+    show_packages
+    execute_scripts
+    help
+EOM
+    echo "$VAR"
+}
+
+show_packages() {
+    local profile="$archsync_data_dir/${archsync_profile}.profile"
+    if [ ! -f "$profile" ]; then
+        echo "profile [$profile] not found"
+        exit 1
+    fi
+
+    local packages=""
+
+    while read -r set_name; do
+        local set_file="$archsync_data_dir/${set_name}.list"
+        if [ -f "$set_file" ]; then
+            local current_packages
+            current_packages="$(cat $set_file)"
+            packages="$packages\n$current_packages"
+        fi
+    done < "$profile"
+
+    echo -e "$packages" | sort | uniq | grep -v '^$'
+}
+
+execute_scripts() {
+    local profile="$archsync_data_dir/${archsync_profile}.profile"
+    if [ ! -f "$profile" ]; then
+        echo "profile [$profile] not found"
+        exit 1
+    fi
+
+    while read -r set_name; do
+        local set_file="$archsync_data_dir/${set_name}.sh"
+        if [ -f "$set_file" ]; then
+            source "$set_file"
+        fi
+    done < "$profile"
+}
+
+if [[ ${#} -eq 0 ]]; then
+   print_help
+   exit 1
+fi
+
+subcommand=""
+
+while getopts ":c:p:d:" arg; do
+  case ${arg} in
+    c) subcommand="$OPTARG" ;;
+    p) archsync_profile="$OPTARG" ;;
+    d) archsync_data_dir="$OPTARG" ;;
+  esac
+done
+
+case $subcommand in
+    "show_packages") show_packages ;;
+    "execute_scripts") execute_scripts ;;
+    "help") print_help ;;
+    *) echo "command [$subcommand] not found" && exit 1 ;;
+esac
