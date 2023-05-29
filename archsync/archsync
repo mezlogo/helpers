@@ -12,6 +12,7 @@ Environment variables:
     ARCH_SYNC_DIR - specify dir for .sh and .list files=$archsync_data_dir
     ARCH_SYNC_PROFILE - profile name=$archsync_profile
 Subscommands:
+    sync
     show_packages
     execute_scripts
     help
@@ -72,6 +73,10 @@ while getopts ":c:p:d:" arg; do
 done
 
 case $subcommand in
+    "sync")
+        pikaur -S --needed --noconfirm "$(show_packages)"
+        execute_scripts
+        ;;
     "show_packages") show_packages ;;
     "execute_scripts") execute_scripts ;;
     "help") print_help ;;
