@@ -50,7 +50,8 @@ execute_scripts() {
     while read -r set_name; do
         local set_file="$archsync_data_dir/${set_name}.sh"
         if [ -f "$set_file" ]; then
-            source "$set_file"
+            echo "executing: [$set_file]"
+            "$set_file"
         fi
     done < "$profile"
 }
