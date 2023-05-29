@@ -74,7 +74,7 @@ done
 
 case $subcommand in
     "sync")
-        pikaur -S --needed --noconfirm "$(show_packages)"
+        pikaur -S --needed --noconfirm $(show_packages)
         execute_scripts
         ;;
     "show_packages") show_packages ;;
